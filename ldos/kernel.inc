@@ -5,7 +5,7 @@
 ;	Written by Leonard/Oxygene
 ;	https://github.com/arnaud-carre/ldos
 ;
-;	Public function library
+;	Public function library	
 ;
 ;---------------------------------------------------------
 
@@ -27,7 +27,7 @@ LDOS_ASSERT					=	1*4
 ; Start music if already loaded
 LDOS_MUSIC_START			=	2*4
 
-; Get LSP music frame tick
+; Get LSP music frame tick 
 ; Use this counter if you want to sync gfx with music
 ; returns d0.l: music frame tick
 LDOS_MUSIC_GET_TICK 		=	3*4
@@ -82,10 +82,6 @@ LDOS_GET_CLOCK_TICK					=	12*4
 ; out: d0.w 16bits
 LDOS_MUSIC_GET_SEQ_POS				=	13*4
 
-; When you need to all the cycles spent on the trackloader
-; you can use this to install a simpler music only handler
-; bpm changes will be ignored
-LDOS_MUSIC_ONLY_CIA_INSTALL			=	14*4
 
 
 LDOS_MEM_ANY_RAM		=	(1<<30)
