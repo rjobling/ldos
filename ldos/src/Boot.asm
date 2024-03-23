@@ -27,7 +27,7 @@ bootStart:
 	bra.s	start0		; 12
 	dc.b	'  '
 ;	dc.b	'0123456789abcdef'
-	dc.b	'LDOS v1.30 Amiga'
+	dc.b	'LDOS v1.40 Amiga'
 	dc.b	'-Leonard/OXYGENE'
 	even
 	
@@ -52,8 +52,6 @@ start0:
 .noFast:
 
 		move.l	m_chipStart(a7),a0
-		add.l	m_chipSize(a7),a0
-		sub.l	#64*1024,a0
 		move.l	a0,m_buffer(a7)
 
 		move.l	4.w,a6
