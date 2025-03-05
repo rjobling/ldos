@@ -11,7 +11,7 @@
 
 
 		macro	ADF_DISK_NAME
-			dc.b	"cycle-op.adf"
+			dc.b	"demo-cosmicorbs.adf"
 		endm
 
 _LVOOpenLib			=	-552
