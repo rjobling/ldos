@@ -18,8 +18,8 @@ _LVOOpenLib			=	-552
 
 MEMF_FAST		=	(1<<2)	; Fast memory
 MEMF_LARGEST	=	(1<<17)	; AvailMem: return the largest chunk size
-_LVOAvailMem	=	-216	
-_LVOAllocMem	=	-198	
+_LVOAvailMem	=	-216
+_LVOAllocMem	=	-198
 
 
 ; come from boot sector
@@ -51,7 +51,7 @@ entry:
 		move.l	$4.w,a6
 		move.w	14+6(a6),d0
 		cmp.w   #37,d0		; LIB_VERSION should be at least 37
-		blt.s   .noCache		
+		blt.s   .noCache
 		moveq	#0,d0
 		moveq	#-1,d1
 		jsr		-648(a6)
@@ -70,7 +70,7 @@ entry:
 		jsr     -270(a6)            ; WaitTOF()
 		jsr     -270(a6)
 .fail:
-		
+
 	; check the CPU and clear cache & VBR if requiered
 		move.l	$4.w,a6
 		moveq	#3,d0
@@ -104,7 +104,7 @@ entry:
 	; read back entropy initial value
 		lea		trackloaderVars(pc),a6
 		move.w	m_entropyValue(a7),trkEntropyValue(a6)
-		
+
 		tst.l	m_hddBuffer1(a7)
 		bne		.memInit
 
@@ -130,22 +130,22 @@ entry:
 
 		; Align fake RAM start & end on 128KiB
 		lea		m_fakeStart(a7),a0
-		bsr		align128				
+		bsr		align128
 
 		cmpi.l	#512*1024,m_fakeSize(a7)
 		blt		memoryError
-	
+
 	; initialize memory manager
 .memInit:
 		lea		chipMemTable(pc),a0
 		move.l	m_chipStart(a7),d0
-		bsr		initMemTable		
-		
+		bsr		initMemTable
+
 		lea		fastMemTable(pc),a0
 		move.l	m_fakeStart(a7),d0				; base ad
-		bsr		initMemTable		
-		
-		
+		bsr		initMemTable
+
+
 		;--------------------------------------
 		; Now we kill system and reloc kernel
 
@@ -159,7 +159,7 @@ entry:
 		lea		pKernelBase(pc),a0
 		move.l	a1,(a0)
 		ori.l	#LDOS_MEM_ANY_RAM,(a0)
-		
+
 		; Alloc kernel chip memory
 		lea		dynamicAllocs(pc),a0
 		bsr		batchAllocator
@@ -191,7 +191,7 @@ align128:
 		move.l	d0,(a0)
 		move.l	d1,4(a0)
 		rts
-		
+
 supervisor:
 		moveq	#0,d0
 		dc.l	$4e7b0801		; opcode "MOVEC d0,VBR"
@@ -209,14 +209,14 @@ memoryError:
 		lea		.txt(pc),a0
 		bsr		debugScreenPrint
 .infl:	bra.s	.infl
-		
+
 .txt:	dc.b	'LDOS Kernel',10
 		dc.b	'This demo requires 1MiB of RAM',10
 		dc.b	0
-graphicsLibName:	dc.b	'graphics.library',0		
-		
+graphicsLibName:	dc.b	'graphics.library',0
+
 		even
-		
+
 ;-----------------------------------------------------------------------------------
 ;
 ; WARNING: this part contains kernel code only and is relocated in low memory
@@ -227,12 +227,12 @@ kernelStart:
 		bsr		vectorSet
 
 		bsr		trackloaderInit
-		
+
 		bsr		systemInstall
-		
+
 		moveq	#125,d0						; 125 BPM is default kernel freq
 		bsr		cia50HzInstall
-		
+
 mainDemoLoop:
 
 		; if next FX is not loaded, do it!
@@ -242,9 +242,9 @@ mainDemoLoop:
 .already:
 
 		bsr		runLoadedFile
-		
+
 		bra.s	mainDemoLoop
-		
+
 			opt o-		; switch off ALL optimizations (we really want these bra to be 4bytes )
 
 kernelLibrary:
@@ -272,11 +272,12 @@ kernelLibrary:
 			bra.w	freeAnyBinaryBlob
 			bra.w	musicGetDmacon
 			bra.w	musicFrameTick
+			bra.w	musicGetDmaconTick		; music get info
 			bra.w	wipePreviousFx
-			
-			
+
+
 			opt o+		; enable
-			
+
 persistentChipAlloc:
 			movem.l	a0,-(a7)
 			move.l	d0,-(a7)
@@ -285,7 +286,7 @@ persistentChipAlloc:
 			lea		persistentChipAd(pc),a0
 			move.l	d0,(a0)+				; store AD
 			move.l	(a7)+,(a0)+				; store original size
-			movem.l	(a7)+,a0			
+			movem.l	(a7)+,a0
 			rts
 
 persistentFakeAlloc:
@@ -296,9 +297,9 @@ persistentFakeAlloc:
 			lea		persistentFakeAd(pc),a0
 			move.l	d0,(a0)+				; store AD
 			move.l	(a7)+,(a0)+				; store original size
-			movem.l	(a7)+,a0			
+			movem.l	(a7)+,a0
 			rts
-			
+
 persistentChipGet:
 			move.l	persistentChipAd(pc),d0
 			move.l	persistentChipSize(pc),d1
@@ -308,23 +309,23 @@ persistentFakeGet:
 			move.l	persistentFakeAd(pc),d0
 			move.l	persistentFakeSize(pc),d1
 			rts
-			
+
 persistentChipTrash:
 			movem.l	a0,-(a7)
 			bsr		trashPersistentChip
 			lea		persistentChipAd(pc),a0
 			clr.l	(a0)+
-			movem.l	(a7)+,a0			
+			movem.l	(a7)+,a0
 			rts
-			
+
 persistentFakeTrash:
 			movem.l	a0,-(a7)
 			bsr		trashPersistentFake
 			lea		persistentFakeAd(pc),a0
 			clr.l	(a0)+
-			movem.l	(a7)+,a0			
+			movem.l	(a7)+,a0
 			rts
-			
+
 userLoadNextFile:
 			bsr		loadNextFile
 			rts
@@ -361,10 +362,10 @@ preloadFromLz4Memory:
 			even
 
 
-runLoadedFile:		
+runLoadedFile:
 		; WARNING: to avoid memory fragmentation, the next FX is always moved back to low memory
 		; to do this, simply mark next FX pages as FREE, alloc a new block, and MOVE memory there.
-		; DO NOT CHANGE ANYTHING HERE without caution: The memory block is marked as "free" but 
+		; DO NOT CHANGE ANYTHING HERE without caution: The memory block is marked as "free" but
 		; the memory is still valid. We just can move "down" some blocks
 		; WARNING: Both memory array overlap! But destination always lower ad than source
 			moveq	#MEMLABEL_PRECACHED_FX,d0
@@ -386,7 +387,7 @@ runLoadedFile:
 			bsr		relocLSBank
 			bra.s	.next
 
-.noLsBank:	
+.noLsBank:
 			move.w	currentFile(pc),-(a7)
 			movea.l	a7,a1
 			lea		.txtUnknowFile(pc),a0
@@ -398,7 +399,7 @@ runLoadedFile:
 
 		; inc current file in case the next FX do a PRELOAD command
 			lea		currentFile(pc),a0
-			addq.w	#1,(a0)	
+			addq.w	#1,(a0)
 
 		; get the kernel CRC
 	IF _DEBUG
@@ -410,7 +411,7 @@ runLoadedFile:
 		; call the FX code
 			cmpa.l	#0,a1
 			beq.s	.noExec
-			
+
 			move.b	#MEMLABEL_USER_FX,(SVAR_CURRENT_MEMLABEL).w
 			lea		nextFx(pc),a0
 			moveq	#0,d0
@@ -447,7 +448,7 @@ runLoadedFile:
 			move.w	d0,$b8(a5)
 			move.w	d0,$c8(a5)
 			move.w	d0,$d8(a5)
-			
+
 .ldosMusic:
 
 		; Free all memory of previous FX
@@ -455,10 +456,10 @@ runLoadedFile:
 			bsr		freeMemLabel
 
 			rts
-	
+
 .txtUnknowFile:	dc.b	"Unable to execute file id #%w",0
 				even
-								
+
 installCopperList:
 			lea		pCopperList1(pc),a2
 			move.l	(a2),a1
@@ -471,7 +472,7 @@ installCopperList:
 			move.l	d0,$dff080
 			move.l	d0,a0
 			rts
-		
+
 musicGetDmacon:
 			lea		LSPDmaCon(pc),a0
 			rts
@@ -479,6 +480,8 @@ musicGetDmacon:
 musicFrameTick:
 			lea		$dff0a0,a6
 			bsr		LSP_MusicPlayTick
+			lea		musicTick(pc),a0
+			addq.l	#1,(a0)
 			rts
 
 musicStop:	lea		bMusicPlay(pc),a0
@@ -494,18 +497,22 @@ musicStop:	lea		bMusicPlay(pc),a0
 			moveq	#MEMLABEL_MUSIC_LSM,d0
 			bsr		freeMemLabel
 			moveq	#MEMLABEL_MUSIC_LSB,d0
-			bsr		freeMemLabel			
+			bsr		freeMemLabel
 			rts
 
 musicGetTick:
 			move.l	musicTick(pc),d0
 			rts
 
+musicGetDmaconTick:
+			move.l	musicDmaconTick(pc),d0
+			rts
+
 ldosGetClockTick:
 			move.l	clockTick(pc),d0
 			rts
 
-musicStart:	
+musicStart:
 			lea		bMusicPlay(pc),a0
 			tst.w	(a0)
 			bne.s	.errm
@@ -531,7 +538,7 @@ musicStart:
 			lea		bMusicPlay(pc),a0
 			move.w	#-1,(a0)
 .skip:		rts
-						
+
 .errm:		lea		.txt(pc),a0
 			trap	#0
 .txt:		dc.b	"musicStart called while music is playing",0
@@ -627,7 +634,7 @@ memMoveMinus:
 
 ; a0: dst ( aligned on 2 )
 ; d0.l: size in bytes ( aligned on 2 )
-fastClear:	
+fastClear:
 			movem.l	d0-d7/a0-a2,-(a7)
             add.l   d0,a0               ; clear top to bottom
 			move.w	d0,-(a7)
@@ -661,19 +668,19 @@ fastClear:
 .useless:	rts
 
 
-		
-		
+
+
 ; input: nextFx struct properly filled
 nextEXEDoAlloc:
 		movem.l	d0-d1/a0,-(a7)
 
 		lea		nextFx(pc),a6
-				
+
 		move.b	#MEMLABEL_PRECACHED_FX,(SVAR_CURRENT_MEMLABEL).w
 
 		move.l	m_size(a6),d0
 		addi.l	#DEPACK_IN_PLACE_MARGIN+DISK_SECTOR_ALIGN_MARGIN,d0	; unpacked size
-		
+
 		btst.b	#kLDOSLsBankFile,(nextFx+m_flags+1)(pc)	; Try to directly load in CHIP if music file
 		beq.s	.normal
 
@@ -684,7 +691,7 @@ nextEXEDoAlloc:
 
 		move.l	(a7)+,d0
 		bra.s	.normal
-		
+
 .ok:	addq.l	#4,a7
 		bra.s	.next
 
@@ -710,8 +717,8 @@ getEntropy:
 			move.w	trkEntropyValue(a0),d0
 			move.l	(a7)+,a0
 			rts
-		
-;-----------------------------------------------------------------		
+
+;-----------------------------------------------------------------
 ; input
 ; d0: screen number ( script.txt order )
 ; output:
@@ -724,9 +731,9 @@ loadBinaryBlob:
 ;			move.b	#MEMLABEL_PRECACHED_FX,d0
 ;			bsr		freeMemLabel
 ;			move.w	(a7)+,d0
-			
+
 			bsr		allocAndLoadFile
-		
+
 			lea		nextFx(pc),a6
 			move.l	m_ad(a6),a0
 			move.l	m_size(a6),d0
@@ -740,9 +747,9 @@ freeAnyBinaryBlob:
 			rts
 
 
-;-----------------------------------------------------------------		
+;-----------------------------------------------------------------
 ; input:
-; d0: screen number ( script.txt order )		
+; d0: screen number ( script.txt order )
 ; output:
 ; nextFx filled properly
 getFSInfos:
@@ -750,7 +757,7 @@ getFSInfos:
 
 .infloop:	cmp.w	fatSize(pc),d0		; special case to test each FX. when we reach end of disk, loop here
 			bge		.notf
-		
+
 			lea	directory(pc),a5
 			add.w	d0,a5
 			lea		nextFx(pc),a6
@@ -789,15 +796,15 @@ getFSInfos:
 .txt:		dc.b	'File index %w does not exist!',0
 			even
 
-		
-;-----------------------------------------------------------------		
-; d0: screen number ( script.txt order )		
+
+;-----------------------------------------------------------------
+; d0: screen number ( script.txt order )
 ; a0: buffer to load
 loadFileCustom:
 			pea		(a0)
 			bsr		getFSInfos
 			move.l	(a7)+,a0
-			
+
 			lea		nextEXEDepacked(pc),a1
 			move.l	a0,(a1)
 			lea		nextFx(pc),a6
@@ -817,11 +824,11 @@ loadFileCustom:
 			lea		nextFx(pc),a6
 			clr.l	m_ad(a6)
 			rts
-		
 
 
-;-----------------------------------------------------------------		
-; d0: screen number ( script.txt order )		
+
+;-----------------------------------------------------------------
+; d0: screen number ( script.txt order )
 allocAndLoadFile:
 
 			bsr		getFSInfos
@@ -833,7 +840,7 @@ allocAndLoadFile:
 			move.l	nextEXEDepacked(pc),m_ad(a6)
 			move.l	alignedDmaLoadAd(pc),a0
 
-; input: 
+; input:
 ;	nextFx struct properly filled
 ;	a0: loading address (with enough margin to depack)
 loadFileRaw:
@@ -844,7 +851,7 @@ loadFileRaw:
 			bsr		trackLoadStart
 
 		; now loading is running async, we could alloc a mem block for depacked data
-		; and run the depacker in the main thread (depacker takes care or loading ptr)		
+		; and run the depacker in the main thread (depacker takes care or loading ptr)
 			move.l	alignedDmaLoadAd(pc),a1
 			add.w	sectorOffset(pc),a1		; packed data ad
 			move.l	m_ad(a6),a0
@@ -852,7 +859,7 @@ loadFileRaw:
 			btst.b	#7,m_flags(a6)		; file entry flags
 			beq.s	.depack
 
-		; stored file (unpacked) wait for disk io ends		
+		; stored file (unpacked) wait for disk io ends
 			movem.l	a0-a1,-(a7)
 .wLoop:		move.w	(trackloaderVars+trkDecodedSecCount)(pc),d0
 			bne.s	.wLoop
@@ -864,7 +871,7 @@ loadFileRaw:
 			bra.s	.over
 
 			; run the depacker (packed data are loading async)
-.depack:	
+.depack:
 
 			;    a4 = output buffer, a5 = input stream
 			;    a6 = *end* of temporary storage area (only if OPT_STORAGE_OFFSTACK)
@@ -890,7 +897,7 @@ setNextFileId:
 			move.w	d0,(a0)
 			rts
 
-;-----------------------------------------------------------------		
+;-----------------------------------------------------------------
 loadNextFile:
 			move.l	(nextFx+m_ad)(pc),d0
 			bne		loadNextFileError
@@ -899,9 +906,9 @@ loadNextFile:
 			bsr		allocAndLoadFile
 
 			rts
-		
-		
-ldos50Hz:	
+
+
+ldos50Hz:
 			move.w	#$2000,$dff09c
 			move.w	#$2000,$dff09c
 			btst.b	#0,$bfdd00
@@ -929,7 +936,7 @@ ldos50Hz:
 			lea		LSP_DmaconIrq(pc),a0
 			move.l	a0,$78.w
 			move.b	#$19,$bfdf00			; start timerB, one shot
-	
+
 .noMusic:	bsr		trackLoaderTick
 
 			movem.l	(a7)+,d0-a6
@@ -944,6 +951,10 @@ LSP_DmaconIrq:
 			move.w	LSPDmaCon(pc),$dff096
 			pea		ldos50Hz(pc)
 			move.l	(a7)+,$78.w
+			move.l	a0,-(a7)
+			lea		musicDmaconTick(pc),a0
+			addq.l	#1,(a0)
+			move.l	(a7)+,a0
 .skipb:		nop
 			rte
 
@@ -963,22 +974,22 @@ ispSet:		lea		.supervisor(pc),a0
 			move.l	a0,a7
 			rte
 
-vectorSet:				
+vectorSet:
 			; set both user & supervisor stack
 			lea		.supervisor(pc),a0
 			move.l	a0,$80.w
 			trap	#0
-			rts			
+			rts
 
 .supervisor:
 		; Set all suspicious interrupts to RTE intruction
-			move.w	#$2700,sr				; disable any 68k interrupt		
+			move.w	#$2700,sr				; disable any 68k interrupt
 			lea		unRTE(pc),a1
 			lea		$30.w,a0
 .fill:		move.l	a1,(a0)+
 			cmpa.l	#$f0,a0
 			bne.s	.fill
-			
+
 			moveq	#($30-$8)/4-1,d0
 			lea		guruBootStrap(pc),a0
 			lea		$8.w,a1
@@ -989,28 +1000,28 @@ vectorSet:
 			move.l	a0,$80.w
 unRTE:		rte					; back to user land
 
-			
+
 pollVSync:	btst	#0,$dff005
 			beq.s	pollVSync
 .wdown:		btst	#0,$dff005
 			bne.s	.wdown
 			rts
-		
-			
+
+
 systemInstall:
 			; Always disable IRQ ( but keep DMA )
 			move.w	#(1<<12)|(1<<6)|(1<<5)|(1<<4),$dff09a	; Disable DSKSync, Copper, VBL, Blitter
-			move.w	#$5fff,$dff09c				; clear all int req		
+			move.w	#$5fff,$dff09c				; clear all int req
 
 			; wait any pending blitter op
 .waitb:		btst	#6,$dff002
 			bne.s	.waitb
 
 			bsr		ispSet
-			
+
 			lea		kernelLibrary(pc),a0
 			move.l	a0,(LDOS_BASE).w
-			
+
 			move.l	persistentChipAd(pc),d0
 			bne.s	.skip						; if persistent chip memory is here, don't trash copper
 
@@ -1022,11 +1033,11 @@ systemInstall:
 			bsr.s	pollVSync
 			move.w	#(1<<5)|(1<<7),$dff096					; switch OFF Sprite DMA & copper
 			bsr		clearSprites
-			
+
 .skip:
 			move.w	#$8000|(1<<4)|(1<<9),$dff096		; DMA disk enabled
 			rts
-			
+
 cia50HzInstall:
 		; install 50Hz CIA TimerA for LDOS_TICK (& music player)
 		; input: d0 : BPM
@@ -1045,12 +1056,12 @@ cia50HzInstall:
 			move.b	d1,$500(a0)
 			move.b	#$83,$d00(a0)
 			move.b	#$11,$e00(a0)
-			
+
 			move.b	#496&255,$600(a0)		; set timer b to 496 ( to set DMACON )
 			move.b	#496>>8,$700(a0)
 
 			move.w 	#(1<<13),$dff09c		; clear any req CIA
-		
+
 			move.w 	#$8000|(1<<13),$dff09a	; CIA interrupt enabled
 			movem.l	(a7)+,d0-d1/a0
 			rts
@@ -1063,17 +1074,17 @@ clearSprites:
 			move.l	d1,(a0)+
 			dbf		d0,.clspr
 			rts
-		
+
 guruBootStrap:
 		rept	(($30-$8)/4)
 			bsr.w	guruMeditation
 		endr
-		
+
 guruMeditation:
 			move.w	#$7fff,$dff096
 			move.w	#$7fff,$dff09a
-			move.l	a6,DEBUG_SCREEN_AD		
-			move.l	(a7)+,DEBUG_BSS_ZONE+dbg_iVector				; to get the vector id (bsr)					
+			move.l	a6,DEBUG_SCREEN_AD
+			move.l	(a7)+,DEBUG_BSS_ZONE+dbg_iVector				; to get the vector id (bsr)
 			lea		DEBUG_REGS_ZONE,a6
 			move.l	2(a7),(a6)+		; PC
 			move.w	(a7),(a6)+		; SR
@@ -1095,9 +1106,9 @@ guruMeditation:
 			move.l	a7,(a6)+
 			move.l	usp,a0
 			move.l	a0,(a6)+		; usp
-			
+
 			bsr		debugScreenSetup
-		
+
 		; get the vector number
 			lea		guruBootStrap(pc),a0
 			move.l	DEBUG_BSS_ZONE+dbg_iVector,d0
@@ -1112,7 +1123,7 @@ guruMeditation:
 			lea		.crTxt(pc),a0
 			lea		DEBUG_BSS_ZONE+dbg_iVector,a1
 			bsr		debugScreenPrint
-		
+
 		; print vector name
 			move.w	(a7)+,d0
 			subq.w	#2,d0
@@ -1135,11 +1146,11 @@ guruMeditation:
 			lea		.iMemDump0(pc),a0
 			lea		DEBUG_BSS_ZONE+dbg_iVector,a1
 			bsr		debugScreenPrint
-		
+
 			lea		.iMemDump1(pc),a0
 			move.l	(a7)+,a1
 			bsr		debugScreenPrint
-	
+
 			move.l	DEBUG_REGS_ZONE+17*4+2,d0
 			andi.l	#$00fffffe,d0
 			move.l	d0,DEBUG_BSS_ZONE+dbg_iVector
@@ -1147,7 +1158,7 @@ guruMeditation:
 			lea		.iMemDump0(pc),a0
 			lea		DEBUG_BSS_ZONE+dbg_iVector,a1
 			bsr		debugScreenPrint
-		
+
 			lea		.iMemDump1(pc),a0
 			move.l	(a7)+,a1
 			bsr		debugScreenPrint
@@ -1180,7 +1191,7 @@ guruMeditation:
 			dc.b	'%w %w %w %w %w %w %w %w',10,10
 			dc.b	0
 			even
-			
+
 .eTable:	dc.w	.e02-.e02
 			dc.w	.e03-.e02
 			dc.w	.e04-.e02
@@ -1207,21 +1218,21 @@ assertVector:
 			movem.l	a0-a1,-(a7)
 			move.w	#$7fff,$dff096
 			move.w	#$7fff,$dff09a
-			
+
 			bsr		debugScreenSetup
 
 			lea		.txtAssert(pc),a0
 			bsr		debugScreenPrint
-	
+
 			movem.l	(a7)+,a0-a1
 			bsr		debugScreenPrint
-			
+
 .infl:		bra.s	.infl
-			
+
 .txtAssert:	dc.b	'LDOS Kernel User ASSERT:',10,0
 			even
 
-	
+
 crcCompute:		movem.l	d1-d4/a0-a2,-(a7)
 				lea		crcProceedInfo(pc),a0
 				lea		kernelStart(pc),a1
@@ -1235,13 +1246,13 @@ crcCompute:		movem.l	d1-d4/a0-a2,-(a7)
 				subq.w	#1,d2
 .count:			add.w	(a2)+,d3
 				dbf		d2,.count
-				
+
 				tst.w	d0
 				bne.s	.set
 			; check
 				cmp.w	(a0),d3
 				bne.s	.bad
-				
+
 .set:			move.w	d3,(a0)+
 				addq.w	#1,d4
 				bra.s	.loop1
@@ -1256,44 +1267,44 @@ crcCompute:		movem.l	d1-d4/a0-a2,-(a7)
 				even
 
 
-loadNextFileError:				
+loadNextFileError:
 		lea		.err(pc),a0
 		trap	#0
 .err:	dc.b	'loadNextFile called several times',0
 		even
 
-				
-kernelCrcEnd:	
-	
-	;-------------------------------------------------------------------				
+
+kernelCrcEnd:
+
+	;-------------------------------------------------------------------
 	; Memory Allocator
-	;-------------------------------------------------------------------					
+	;-------------------------------------------------------------------
 		include "memoryAllocator.asm"
-				
-	;-------------------------------------------------------------------				
+
+	;-------------------------------------------------------------------
 	; Track Loader
-	;-------------------------------------------------------------------					
+	;-------------------------------------------------------------------
 		include	"trackLoader.asm"
 
-	;-------------------------------------------------------------------				
+	;-------------------------------------------------------------------
 	; Relocation routines
-	;-------------------------------------------------------------------					
+	;-------------------------------------------------------------------
 		include	"relocator.asm"
 
-	;-------------------------------------------------------------------				
+	;-------------------------------------------------------------------
 	; screen output debug routines
-	;-------------------------------------------------------------------					
+	;-------------------------------------------------------------------
 		include	"debug_screen.asm"
-		
-	;-------------------------------------------------------------------				
-	; ARJ mode 7 depacker 
-	;-------------------------------------------------------------------				
+
+	;-------------------------------------------------------------------
+	; ARJ mode 7 depacker
+	;-------------------------------------------------------------------
 ;		include "arj7.asm"
 		include "inflate.asm"
 
-	;-------------------------------------------------------------------				
+	;-------------------------------------------------------------------
 	; Light Speed Module Player
-	;-------------------------------------------------------------------				
+	;-------------------------------------------------------------------
 		include	"LightSpeedPlayer.asm"
 
 blackBoardBuffer:	dcb.b	LDOS_BLACKBOARD_SIZE,0
@@ -1309,7 +1320,7 @@ crcProceedInfo:
 fatSize:	dc.w	0,0				; hacky: fatsize is patched at begin
 
 		dc.w	-2			; end marker
-		
+
 dynamicAllocs:
 ; this struct is patched by FUNC_CHIP_BATCH_ALLOC
 systemChipBase:		dc.l	$100			; this is the first CHIP alloc by kernel, so if it fall to $0, keep $100 space for cpu vectors
@@ -1321,7 +1332,7 @@ pSuperStack:		dc.l	LDOS_SUPERSTACK_SIZE|LDOS_MEM_ANY_RAM
 					dc.l	-2
 
 	rsreset
-	
+
 ; nextFx struct
 m_ad:				rs.l	1
 m_size:				rs.l	1
@@ -1332,7 +1343,7 @@ m_secStart:			rs.w	1
 m_secCount:			rs.w	1
 m_argd1:			rs.l	1
 m_nextFxSize:		rs.w	0
-					
+
 diskOffset:			dc.l	0
 currentFile:		dc.w	0
 nextFx:				dcb.b	m_nextFxSize,0
@@ -1344,6 +1355,7 @@ LSPDmaCon:			dc.w	$8000
 sectorOffset:		ds.w	1
 bMusicPlay:			dc.w	0
 musicTick:			dc.l	0
+musicDmaconTick:	dc.l	0
 clockTick:			dc.l	0
 fiberData:			ds.b	15*4+4+2
 
@@ -1367,8 +1379,6 @@ pMFMRawBuffer:		dc.l	0	;MFM_DMA_SIZE
 pTmpInflateBuffer:	dc.l	0	;INFLATE_TMP_BUFFER_SIZE | LDOS_MEM_ANY_RAM		; ARJ Method 7 depacking buffer
 					dc.l	-2
 
-		
+
 directory:		; NOTE: Directory data are directly appended here by the installer
 kernelEnd:
-
-	

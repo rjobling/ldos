@@ -131,8 +131,13 @@ LDOS_MUSIC_GET_DMACON				=	22*4
 ; you have to call this each frame if you want music to play
 LDOS_MUSIC_FRAME_TICK				=	23*4
 
+; Get LSP music dmacon tick 
+; Use this counter if you need to time taking over the music tick
+; returns d0.l: music dmacon tick
+LDOS_MUSIC_GET_DMACON_TICK 	    	=	24*4
+
 ; DO NOT USE!! LDOS internal
-LDOS_WIPE_PREVIOUS_FX				=	24*4
+LDOS_WIPE_PREVIOUS_FX				=	25*4
 
 
 LDOS_MEM_ANY_RAM		=	(1<<30)

@@ -11,7 +11,7 @@
 
 
 		macro	ADF_DISK_NAME
-			dc.b	"demo-cosmicorbs.adf"
+			dc.b	"enchantedglitch-cosmicorbs.adf"
 		endm
 
 _LVOOpenLib			=	-552
@@ -27,9 +27,9 @@ DISK1_SIZE			=	880*1024
 
 		include "kernelPrivate.inc"
 
-		
+
 		code
-	
+
 start:
 
 			move.l	a7,pOriginalStack
@@ -38,7 +38,7 @@ start:
 
 			move.l	$4.w,a6
 			lea		dosLibName(pc),a1
-			moveq	#36,d0		; check OS2.0++ 
+			moveq	#36,d0		; check OS2.0++
 			jsr		_LVOOpenLib(a6)
 			move.l	d0,dosHandle
 			sne		isOS2
@@ -88,7 +88,7 @@ start:
 			add.l	#(512-64)*1024,a0
 			jmp		(a2)				; jump in the bootsector code
 
-		
+
 ; a0: file name
 ; a1: buffer
 ; d0: bytes to load
@@ -121,7 +121,7 @@ loadFile:
 
 			rts
 
-			
+
 exitProg:
 
 		; close console
@@ -139,7 +139,7 @@ exitProg:
 			move.l	pOriginalStack(pc),a7
 			moveq	#0,d0
 			rts
-			
+
 waitKey:	lea		txtPressReturn(pc),a0
 			bsr		gemdos9
 			bsr		gemdos7
@@ -161,7 +161,7 @@ gemdos9:	move.l	a0,d2			; String AD
 .fin:		move.l	conHandle,d1		; Handle display.
 			move.l	dosHandle,a6
 			jsr		_LVOWriteFile(a6)
-			rts	
+			rts
 
 gemdos7:	move.l	conHandle,d1
 			move.l	#buffer,d2
@@ -169,7 +169,7 @@ gemdos7:	move.l	conHandle,d1
 			move.l	dosHandle,a6
 			jsr		_LVOReadFile(a6)
 			rts
-			
+
 conHandle:		dc.l	0
 dosHandle:		dc.l	0
 dosLibName:		dc.b	'dos.library',0
@@ -182,8 +182,8 @@ txtPressReturn:	dc.b	10,'Press RETURN key',0
 isOS2:			dc.b	0
 				even
 
-pOriginalStack:	ds.l	1	
-fsize:			ds.l	1			
+pOriginalStack:	ds.l	1
+fsize:			ds.l	1
 fileH:			ds.l	1
 pBuffer:		ds.l	1
 buffer			ds.b	8
