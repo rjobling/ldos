@@ -71,12 +71,16 @@ start:
 			clr.l	m_hddBuffer2(a7)
 
 		; set the CHIP & ANY buffers addr
-			move.l	#chipBuffer,m_chipStart(a7)
-			move.l	#anyBuffer,m_fakeStart(a7)
+			move.l	#chipBuffer+65535,d0
+			move.l	#anyBuffer+65535,d1
+			clr.w	d0
+			clr.w	d1
+			move.l	d0,m_chipStart(a7)
+			move.l	d1,m_fakeStart(a7)
 
 		; search the NOP to jump in the code
-			move.l	m_hddBuffer1(a7),a1
-			movea.l	a1,a2
+			move.l	m_hddBuffer1(a7),a0
+			movea.l	a0,a2
 			lea		512(a2),a3
 .search:	cmpi.w	#$4e71,(a2)+
 			beq.s	.found
@@ -84,8 +88,8 @@ start:
 			bne.s	.search
 			bra		exitProg		; ERROR: NOP not found in bootsector, probably means it's not LDOS ADF file
 
-.found:		move.l	m_chipStart(a7),a0
-			add.l	#(512-64)*1024,a0
+.found:		move.l	m_chipStart(a7),a1
+			add.l	#(512-64)*1024,a1
 			jmp		(a2)				; jump in the bootsector code
 
 
@@ -194,8 +198,8 @@ diskBuffer:		ds.b	DISK1_SIZE
 
 	bss any_ram
 
-anyBuffer:		ds.b	512*1024
+anyBuffer:		ds.b	(512+64)*1024
 
 	bss_c chip_ram
 
-chipBuffer:		ds.b	512*1024
+chipBuffer:		ds.b	(512+64)*1024
