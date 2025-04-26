@@ -16,6 +16,11 @@ _LVOOpenLib			=	-552
 		include	"../kernel.inc"
 		include	"kernelPrivate.inc"
 
+MEMF_FAST		=	(1<<2)	; Fast memory
+MEMF_LARGEST	=	(1<<17)	; AvailMem: return the largest chunk size
+_LVOAvailMem	=	-216	
+_LVOAllocMem	=	-198	
+
 
 ; come from boot sector
 ; d6 = disk offset|FAT size
@@ -25,11 +30,22 @@ _LVOOpenLib			=	-552
 
 entry:
 		lea		fatSize(pc),a0
-		move.w	d6,(a0)
-		lea		diskOffset(pc),a0
-		clr.w	d6
-		swap	d6
-		move.l	d6,(a0)
+		move.w	#$4afc,(a0)				; patched by installer
+		lea		diskOffset+2(pc),a0
+		move.w	(a7)+,(a0)
+
+		tst.l	m_hddBuffer1(a7)		; if we're in HDD mode, no use to query fast ram
+		bne.s	.noFast
+
+	; is there any fast RAM?
+		move.l	#(MEMF_LARGEST|MEMF_FAST),d1
+		jsr		_LVOAvailMem(a6)
+		move.l	d0,m_fakeSize(a7)
+		beq.s	.noFast
+		moveq	#MEMF_FAST,d1
+		jsr		_LVOAllocMem(a6)
+		move.l	d0,m_fakeStart(a7)
+.noFast:
 
 	; switch off cache using system call if ROM > 37
 		move.l	$4.w,a6
@@ -253,6 +269,7 @@ kernelLibrary:
 			bra.w	setNextFileId
 			bra.w	getBlackboardAddr
 			bra.w	preloadFromLz4Memory
+			bra.w	freeAnyBinaryBlob
 			bra.w	wipePreviousFx
 			
 			
@@ -667,7 +684,7 @@ nextEXEDoAlloc:
 
 		move.l	m_packedSize(a6),d0
 		move.l	m_size(a6),d1
-		addi.l	#DEPACK_IN_PLACE_MARGIN-DISK_SECTOR_ALIGN_MARGIN,d1
+		addi.l	#DEPACK_IN_PLACE_MARGIN+DISK_SECTOR_ALIGN_MARGIN,d1
 		sub.l	d0,d1						; offset
 		add.l	(a0),d1						; loading AD
 		lea		alignedDmaLoadAd(pc),a0
@@ -705,6 +722,12 @@ loadBinaryBlob:
 			clr.l	m_ad(a6)			; this is not a standard exe pre_loaded file
 
 			rts
+
+freeAnyBinaryBlob:
+			move.b	#MEMLABEL_PRECACHED_FX,d0
+			bsr		freeMemLabel
+			rts
+
 
 ;-----------------------------------------------------------------		
 ; input:
@@ -764,10 +787,20 @@ loadFileCustom:
 			bsr		getFSInfos
 			move.l	(a7)+,a0
 			
-			lea		alignedDmaLoadAd(pc),a1
+			lea		nextEXEDepacked(pc),a1
 			move.l	a0,(a1)
 			lea		nextFx(pc),a6
 			move.l	a0,m_ad(a6)
+
+			move.l	m_packedSize(a6),d0
+			move.l	m_size(a6),d1
+			addi.l	#DEPACK_IN_PLACE_MARGIN+DISK_SECTOR_ALIGN_MARGIN,d1
+			sub.l	d0,d1						; offset
+			add.l	a0,d1						; loading AD
+			lea		alignedDmaLoadAd(pc),a1
+			move.l	d1,(a1)
+
+			move.l	alignedDmaLoadAd(pc),a0
 
 			bsr		loadFileRaw
 			lea		nextFx(pc),a6
@@ -811,18 +844,25 @@ loadFileRaw:
 		; stored file (unpacked) wait for disk io ends		
 			movem.l	a0-a1,-(a7)
 .wLoop:		move.w	(trackloaderVars+trkDecodedSecCount)(pc),d0
-			beq.s	.loadOk
-			bsr		MFMDecodeTrackCallback
-			bra.s	.wLoop
+			bne.s	.wLoop
 
-.loadOk:	movem.l	(a7)+,a0-a1
+			movem.l	(a7)+,a0-a1
 			exg		a0,a1
 			move.l	m_size(a6),d0
 			bsr		fastMemMove
 			bra.s	.over
 
-		; run the depacker (packed data are loading async)
-.depack:	bsr		mainThreadDepack
+			; run the depacker (packed data are loading async)
+.depack:	
+
+			;    a4 = output buffer, a5 = input stream
+			;    a6 = *end* of temporary storage area (only if OPT_STORAGE_OFFSTACK)
+			movea.l	a0,a4
+			movea.l	a1,a5
+			move.l	pTmpInflateBuffer(pc),a6
+			lea		INFLATE_TMP_BUFFER_SIZE(a6),a6
+
+			bsr		mainThreadDepack
 
 		; free tackloading buffers
 .over:		moveq	#MEMLABEL_TRACKLOAD,d0
@@ -1237,7 +1277,8 @@ kernelCrcEnd:
 	;-------------------------------------------------------------------				
 	; ARJ mode 7 depacker 
 	;-------------------------------------------------------------------				
-		include "arj7.asm"
+;		include "arj7.asm"
+		include "inflate.asm"
 
 	;-------------------------------------------------------------------				
 	; Light Speed Module Player
@@ -1248,7 +1289,7 @@ blackBoardBuffer:	dcb.b	LDOS_BLACKBOARD_SIZE,0
 
 crcProceedInfo:
 		dc.w	kernelCrcStart-kernelStart, kernelCrcEnd-kernelCrcStart,0
-		dc.w	arjCrcStart-kernelStart, arjCrcEnd-arjCrcStart,0
+;		dc.w	arjCrcStart-kernelStart, arjCrcEnd-arjCrcStart,0
 		dc.w	loaderCrcStart-kernelStart, loaderCrcEnd-loaderCrcStart,0
 		dc.w	relocCrcStart-kernelStart, relocCrcEnd-relocCrcStart,0
 		dc.w	memoryCrcStart-kernelStart, memoryCrcEnd-memoryCrcStart,0
@@ -1281,7 +1322,7 @@ m_secCount:			rs.w	1
 m_argd1:			rs.l	1
 m_nextFxSize:		rs.w	0
 					
-diskOffset:			ds.l	1
+diskOffset:			dc.l	0
 currentFile:		dc.w	0
 nextFx:				dcb.b	m_nextFxSize,0
 LSMusic:			dc.l	0
@@ -1293,6 +1334,7 @@ sectorOffset:		ds.w	1
 bMusicPlay:			dc.w	0
 musicTick:			dc.l	0
 clockTick:			dc.l	0
+fiberData:			ds.b	15*4+4+2
 
 	rsreset
 
@@ -1311,9 +1353,8 @@ alignedDmaLoadAd:	dc.l	0
 
 nextEXEAllocs:
 pMFMRawBuffer:		dc.l	0	;MFM_DMA_SIZE
-pArj7Buffer:		dc.l	0	;13320 | LDOS_MEM_ANY_RAM		; ARJ Method 7 depacking buffer
+pTmpInflateBuffer:	dc.l	0	;INFLATE_TMP_BUFFER_SIZE | LDOS_MEM_ANY_RAM		; ARJ Method 7 depacking buffer
 					dc.l	-2
-
 
 		
 directory:		; NOTE: Directory data are directly appended here by the installer
