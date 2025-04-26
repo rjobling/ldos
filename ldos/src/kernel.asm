@@ -270,6 +270,9 @@ kernelLibrary:
 			bra.w	getBlackboardAddr
 			bra.w	preloadFromLz4Memory
 			bra.w	freeAnyBinaryBlob
+			bra.w	musicGetDmacon
+			bra.w	musicFrameTick
+			bra.w	musicGetDmaconTick		; music get info
 			bra.w	wipePreviousFx
 			
 			
@@ -470,6 +473,17 @@ installCopperList:
 			move.l	d0,a0
 			rts
 		
+musicGetDmacon:
+			lea		LSPDmaCon(pc),a0
+			rts
+
+musicFrameTick:
+			lea		$dff0a0,a6
+			bsr		LSP_MusicPlayTick
+			lea		musicTick(pc),a0
+			addq.l	#1,(a0)
+			rts
+
 musicStop:	lea		bMusicPlay(pc),a0
 			clr.w	(a0)
 			lea		$dff000,a0
@@ -488,6 +502,10 @@ musicStop:	lea		bMusicPlay(pc),a0
 
 musicGetTick:
 			move.l	musicTick(pc),d0
+			rts
+
+musicGetDmaconTick:
+			move.l	musicDmaconTick(pc),d0
 			rts
 
 ldosGetClockTick:
@@ -933,6 +951,10 @@ LSP_DmaconIrq:
 			move.w	LSPDmaCon(pc),$dff096
 			pea		ldos50Hz(pc)
 			move.l	(a7)+,$78.w
+			move.l	a0,-(a7)
+			lea		musicDmaconTick(pc),a0
+			addq.l	#1,(a0)
+			move.l	(a7)+,a0
 .skipb:		nop
 			rte
 
@@ -1333,6 +1355,7 @@ LSPDmaCon:			dc.w	$8000
 sectorOffset:		ds.w	1
 bMusicPlay:			dc.w	0
 musicTick:			dc.l	0
+musicDmaconTick:	dc.l	0
 clockTick:			dc.l	0
 fiberData:			ds.b	15*4+4+2
 
@@ -1359,5 +1382,3 @@ pTmpInflateBuffer:	dc.l	0	;INFLATE_TMP_BUFFER_SIZE | LDOS_MEM_ANY_RAM		; ARJ Met
 		
 directory:		; NOTE: Directory data are directly appended here by the installer
 kernelEnd:
-
-	
