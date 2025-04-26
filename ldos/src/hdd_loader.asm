@@ -70,7 +70,7 @@ start:
 
 			clr.l	m_hddBuffer2(a7)
 
-		; set the CHIP & ANY buffers addr
+		; set the CHIP & ANY buffers addr, 64KiB aligned
 			move.l	#chipBuffer+65535,d0
 			move.l	#anyBuffer+65535,d1
 			clr.w	d0
@@ -192,14 +192,14 @@ fileH:			ds.l	1
 pBuffer:		ds.l	1
 buffer			ds.b	8
 
-	bss disk_buffer
+	bss_c chip_ram
 
-diskBuffer:		ds.b	DISK1_SIZE
+chipBuffer:		ds.b	(512+64)*1024
 
 	bss any_ram
 
 anyBuffer:		ds.b	(512+64)*1024
 
-	bss_c chip_ram
+	bss disk_buffer
 
-chipBuffer:		ds.b	(512+64)*1024
+diskBuffer:		ds.b	DISK1_SIZE
