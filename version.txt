@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 LDOS 1.50
 	- new kernel, new "zopfli" packer, best packing ratio than ever
 	- some new function such as LDOS_LOAD_CUSTOM
@@ -16,3 +17,23 @@ LDOS 1.30
 
 LDOS 1.02
 	- first public release
+=======
+LDOS 1.50
+	- new kernel, new "zopfli" packer, best packing ratio than ever
+	- some new function such as LDOS_LOAD_CUSTOM
+	- multi-thread LDOS disk builder for fast packing
+	- single mfm buffer loading, free up some precious CHIP memory
+	- upgrade to LSP v1.26
+
+LDOS 1.31
+	- upgrade to LSP v1.11
+	- new LDOS command LDOS_MUSIC_GET_SEQ_POS to get music sequence position
+
+LDOS 1.30
+	- now LDOS supports Light Speed Player module replay
+	- LDOS kernel public functions cleanup
+	- big installer code cleanup
+
+LDOS 1.02
+	- first public release
+>>>>>>> ccaced94d898776a3e5ebf4c34d40041d89a860b
