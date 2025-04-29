@@ -136,8 +136,11 @@ LDOS_MUSIC_FRAME_TICK				=	23*4
 ; returns d0.l: music dmacon tick
 LDOS_MUSIC_GET_DMACON_TICK 	    	=	24*4
 
+; Reinstall the LDOS 50Hz tick CIA timer.
+LDOS_MUSIC_REINSTALL	 	    	=	25*4
+
 ; DO NOT USE!! LDOS internal
-LDOS_WIPE_PREVIOUS_FX				=	25*4
+LDOS_WIPE_PREVIOUS_FX				=	26*4
 
 
 LDOS_MEM_ANY_RAM		=	(1<<30)

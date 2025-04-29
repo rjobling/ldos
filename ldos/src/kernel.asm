@@ -273,6 +273,7 @@ kernelLibrary:
 			bra.w	musicGetDmacon
 			bra.w	musicFrameTick
 			bra.w	musicGetDmaconTick		; music get info
+			bra.w	musicReinstall
 			bra.w	wipePreviousFx
 			
 			
@@ -506,6 +507,11 @@ musicGetTick:
 
 musicGetDmaconTick:
 			move.l	musicDmaconTick(pc),d0
+			rts
+
+musicReinstall:
+			move.w	LSPCurBpm(pc),d0
+			bsr		cia50HzInstall
 			rts
 
 ldosGetClockTick:

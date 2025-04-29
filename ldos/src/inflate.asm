@@ -102,6 +102,10 @@ static_huffman_prefix:
         dc.b $cd,$db,$b6,$6d,$db,$b6,$6d
         dc.b $db,$a8,$6d,$ce,$8b,$6d,$3b
 
+static_huffman_saved_ptr:
+        ds.b    1
+        even
+
         ifne	OPT_TABLE_LOOKUP
 
 ; Number of bytes required for code-lookup table/tree:
@@ -492,6 +496,8 @@ static_huffman:
 	; tricky: as "a5" src pointer is temporary moved to internal static huffman table, we could
 	; enter infinite loop regarding the calue of SVAR_LOAD_PTR. Set the ptr to $7fxxxxxx to avoid
 	; infinite loop and also don't perturb the trackloader that is still incrementing the low 24 bits
+                lea     static_huffman_saved_ptr(pc),a5
+		move.b	(SVAR_LOAD_PTR).w,(a5)
 		move.b	#$7f,(SVAR_LOAD_PTR).w
 
         lea     static_huffman_prefix(pc),a5
@@ -604,8 +610,8 @@ c_loop:
         beq     decode_loop
         movem.l o_stream(aS),d5-d6/a5
 
-	; we came from static huffman oode path, clear back high byte of SVAR_LOAD_PTR (back to normal)
-		clr.b	(SVAR_LOAD_PTR).w
+	; we came from static huffman code path, restore high byte of SVAR_LOAD_PTR (back to normal)
+		move.b	static_huffman_saved_ptr(pc),(SVAR_LOAD_PTR).w
 
         ; Now decode the compressed data stream up to EOB
 decode_loop:
