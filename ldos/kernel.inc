@@ -139,8 +139,12 @@ LDOS_MUSIC_GET_DMACON_TICK 	    	=	24*4
 ; Reinstall the LDOS 50Hz tick CIA timer.
 LDOS_MUSIC_REINSTALL	 	    	=	25*4
 
+; Check if the HDD version is being used
+; out : d0.b: $ff if hdd version used, $00 if not
+LDOS_IS_HDD_VERSION		 			=	26*4
+
 ; DO NOT USE!! LDOS internal
-LDOS_WIPE_PREVIOUS_FX				=	26*4
+LDOS_WIPE_PREVIOUS_FX				=	27*4
 
 
 LDOS_MEM_ANY_RAM		=	(1<<30)

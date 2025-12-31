@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <thread>
+#include <chrono>
+#include "platform_compat.h"
 #include "ldos.h"
 #include "ldosFile.h"
 #include "jobSystem.h"
@@ -169,12 +172,15 @@ static	bool	AdfExport(char* argv[], const ldosFile* files, int count, const ldos
 		printf("  Floppy compressed data: %3dKiB (%d bytes)\n",(diskOffset+1023)>>10 , diskOffset);
 		printf("  Free space............: %3dKiB (%d bytes)\n", (kMaxAdfSize - diskOffset)>>10, (kMaxAdfSize - diskOffset));
 		// round up to a floppy cylinder size
+		const int cylinderCount = (diskOffset + 2 * 11 * 512 - 1) / (2 * 11 * 512);
+		diskOffset = cylinderCount * (2 * 11 * 512);
+		printf("ADF file round up to %d KiB\n", (diskOffset + 1023) >> 10);
 		BootSectorExec((uint32_t*)adfBuffer);
 
 		FILE* h;
 		if (0 == fopen_s(&h, argv[0], "wb"))
 		{
-			fwrite(adfBuffer, 1, kMaxAdfSize, h);
+			fwrite(adfBuffer, 1, diskOffset, h);
 			fclose(h);
 			ret = true;
 		}
@@ -202,9 +208,50 @@ static bool jobCompress(void* base, int index)
 }
 
 
+// Helper function to find a file in the current directory or parent directory
+static bool FindFile(const char* drive, const char* dir, const char* filename, const char* ext, char* outPath, size_t outPathSize)
+{
+	// Try current directory first
+	_makepath_s(outPath, outPathSize, drive, dir, filename, ext);
+	FILE* test = NULL;
+	if (0 == fopen_s(&test, outPath, "rb"))
+	{
+		fclose(test);
+		return true;
+	}
+
+	// Try parent directory
+	char parentDir[_MAX_DIR];
+	strcpy_s(parentDir, sizeof(parentDir), dir);
+	size_t len = strlen(parentDir);
+
+	// Remove trailing slash if present
+	if (len > 0 && (parentDir[len-1] == '/' || parentDir[len-1] == '\\'))
+		parentDir[--len] = '\0';
+
+	// Find the last slash and truncate there
+	for (size_t i = len - 1; i >= 0; i--)
+	{
+		if (parentDir[i] == '/' || parentDir[i] == '\\')
+		{
+			parentDir[i+1] = '\0';
+			break;
+		}
+	}
+
+	_makepath_s(outPath, outPathSize, drive, parentDir, filename, ext);
+	if (0 == fopen_s(&test, outPath, "rb"))
+	{
+		fclose(test);
+		return true;
+	}
+
+	return false;
+}
+
 int	main(int _argc, char *_argv[])
 {
-	printf("LDOS Installer v1.50\n");
+	printf("LDOS Installer v1.51\n");
 	printf("Written by Arnaud Carr%c.\n\n", 0x82);
 
 	assert(16 == sizeof(ldosFatEntry));
@@ -237,8 +284,17 @@ int	main(int _argc, char *_argv[])
 	char sKernelFilename[_MAX_PATH];
 	char sBootFilename[_MAX_PATH];
 	_splitpath_s(argv[0], sDrive, _MAX_DRIVE, sDir, _MAX_DIR, NULL, 0, NULL, 0);
-	_makepath_s(sKernelFilename, _MAX_PATH, sDrive, sDir, "kernel", "bin");
-	_makepath_s(sBootFilename, _MAX_PATH, sDrive, sDir, "boot", "bin");
+
+	if (!FindFile(sDrive, sDir, "kernel", "bin", sKernelFilename, _MAX_PATH))
+	{
+		printf("ERROR: Unable to find kernel.bin in executable directory or parent directory!\n");
+		return -1;
+	}
+	if (!FindFile(sDrive, sDir, "boot", "bin", sBootFilename, _MAX_PATH))
+	{
+		printf("ERROR: Unable to find boot.bin in executable directory or parent directory!\n");
+		return -1;
+	}
 
 	int count = ldosScriptParsing(argv[1], gFileList);
 	if (count > 0)
@@ -254,7 +310,6 @@ int	main(int _argc, char *_argv[])
 		printf("Packing (ZOPFLI deflate) %d files using %d threads...\n", count, nWorkers);
 
 #if D_FANCY_PROGRESS
-		using namespace std::chrono_literals;
 		int ii = 0;
 		for (;;)
 		{
@@ -278,7 +333,7 @@ int	main(int _argc, char *_argv[])
 				}
 			}
 			printf("]\r");
-			std::this_thread::sleep_for(100ms);
+			std::this_thread::sleep_for(std::chrono::milliseconds(150));
 			if (doneCount == count)
 			{
 				printf("\n");
@@ -311,4 +366,3 @@ int	main(int _argc, char *_argv[])
 
 	return 0;
 }
-
